@@ -47,8 +47,6 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
   static int count = 0;
   static int certainty = 220;
 
-
-// found_commands changed to Active and stop
   if (is_new_command) {
     TF_LITE_REPORT_ERROR(error_reporter, "Heard %s (%d) @%dms", found_command,
                          score, current_time);

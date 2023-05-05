@@ -22,16 +22,11 @@ limitations under the License.
 // The size of the input time series data we pass to the FFT to produce the
 // frequency information. This has to be a power of two, and since we're dealing
 // with 30ms of 16KHz inputs, which means 480 samples, this is the next value.
-
-// kMax 512 -> 960
-constexpr int kMaxAudioSampleSize = 960;
+constexpr int kMaxAudioSampleSize = 1024;
 constexpr int kAudioSampleFrequency = 16000;
 
 // The following values are derived from values used during model training.
 // If you change the way you preprocess the input, update all these constants.
-
-// changed Size 40 -> 32
-// changed Count 29 -> 24
 constexpr int kFeatureSliceSize = 32;
 constexpr int kFeatureSliceCount = 24;
 constexpr int kFeatureElementCount = (kFeatureSliceSize * kFeatureSliceCount);

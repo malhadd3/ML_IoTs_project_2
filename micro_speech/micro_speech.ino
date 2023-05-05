@@ -42,7 +42,7 @@ int32_t previous_time = 0;
 // Create an area of memory to use for input, output, and intermediate arrays.
 // The size of this will depend on the model you're using, and may need to be
 // determined by experimentation.
-constexpr int kTensorArenaSize = 120 * 1024;
+constexpr int kTensorArenaSize = 100 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 int8_t feature_buffer[kFeatureElementCount];
 int8_t* model_input_buffer = nullptr;
@@ -50,14 +50,11 @@ int8_t* model_input_buffer = nullptr;
 
 // The name of this function is important for Arduino compatibility.
 void setup() {
-  delay(5000);
   // Set up logging. Google style is to avoid globals or statics because of
   // lifetime uncertainty, but since this has a trivial destructor it's okay.
   // NOLINTNEXTLINE(runtime-global-variables)
-
   static tflite::MicroErrorReporter micro_error_reporter;
   error_reporter = &micro_error_reporter;
-  printf("1");
 
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
@@ -69,7 +66,6 @@ void setup() {
                          model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
-  printf("2");
 
   // Pull in only the operation implementations we need.
   // This relies on a complete list of all the ops needed by this graph.
@@ -79,8 +75,6 @@ void setup() {
   //
   // tflite::AllOpsResolver resolver;
   // NOLINTNEXTLINE(runtime-global-variables)
-
-  //added more op.resolvers
   static tflite::MicroMutableOpResolver<10> micro_op_resolver(error_reporter);
   if (micro_op_resolver.AddDepthwiseConv2D() != kTfLiteOk) {
     return;
@@ -112,14 +106,11 @@ void setup() {
   if (micro_op_resolver.AddMaxPool2D() != kTfLiteOk) {
     return;
   }
-  
-    printf("3");
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(
       model, micro_op_resolver, tensor_arena, kTensorArenaSize, error_reporter);
   interpreter = &static_interpreter;
-  printf("4");
 
   // Allocate memory from the tensor_arena for the model's tensors.
   TfLiteStatus allocate_status = interpreter->AllocateTensors();
@@ -127,7 +118,6 @@ void setup() {
     TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
     return;
   }
-  printf("5");
 
   // Get information about the memory area to use for the model's input.
   model_input = interpreter->input(0);
@@ -142,7 +132,6 @@ void setup() {
     return;
   }
   model_input_buffer = model_input->data.int8;
-  printf("6");
 
   // Prepare to access the audio spectrograms from a microphone or other source
   // that will provide the inputs to the neural network.
@@ -150,21 +139,16 @@ void setup() {
   static FeatureProvider static_feature_provider(kFeatureElementCount,
                                                  feature_buffer);
   feature_provider = &static_feature_provider;
-  printf("7");
 
   static RecognizeCommands static_recognizer(error_reporter);
   recognizer = &static_recognizer;
 
   previous_time = 0;
-  printf("8");
-  delay(5000);
 }
 
 // The name of this function is important for Arduino compatibility.
 void loop() {
-  delay(1000);
   // Fetch the spectrogram for the current time.
-  printf("first");
   const int32_t current_time = LatestAudioTimestamp();
   int how_many_new_slices = 0;
   TfLiteStatus feature_status = feature_provider->PopulateFeatureData(
@@ -179,13 +163,11 @@ void loop() {
   if (how_many_new_slices == 0) {
     return;
   }
-  printf("second");
 
   // Copy feature buffer to input tensor
   for (int i = 0; i < kFeatureElementCount; i++) {
     model_input_buffer[i] = feature_buffer[i];
   }
-  printf("third");
 
   // Run the model on the spectrogram input and make sure it succeeds.
   TfLiteStatus invoke_status = interpreter->Invoke();
@@ -193,7 +175,6 @@ void loop() {
     TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed");
     return;
   }
-  printf("fourth");
 
   // Obtain a pointer to the output tensor
   TfLiteTensor* output = interpreter->output(0);
@@ -208,8 +189,6 @@ void loop() {
                          "RecognizeCommands::ProcessLatestResults() failed");
     return;
   }
-    printf("fifth");
-
   // Do something based on the recognized command. The default implementation
   // just prints to the error console, but you should replace this with your
   // own function for a real application.
